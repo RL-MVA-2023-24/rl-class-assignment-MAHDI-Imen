@@ -51,7 +51,7 @@ class ProjectAgent:
             pickle.dump(agent_state, f)
 
     def load(self):
-        path = '../models/model.pkl'  
+        path = 'model.pkl'  
 
         with open(path, 'rb') as f:
             agent_state = pickle.load(f)
