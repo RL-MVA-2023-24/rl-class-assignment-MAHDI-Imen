@@ -6,7 +6,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import pickle
 import random
-
+import os
 import numpy as np
 
 env = TimeLimit(
@@ -51,6 +51,10 @@ class ProjectAgent:
             pickle.dump(agent_state, f)
 
     def load(self):
+        current_path = os.path.dirname(os.path.realpath(__file__))
+        print(current_path)
+        # list all files in the current directory
+        print(os.listdir(current_path))
         path = 'model.pkl'  
 
         with open(path, 'rb') as f:
