@@ -26,13 +26,13 @@ class ProjectAgent:
             nn.Linear(256, 4)
         )
         config = {'nb_actions': 4,
-          'learning_rate': 0.001,
+          'learning_rate': 0.01,
           'gamma': 0.95,
           'buffer_size': 1000000,
           'epsilon_min': 0.01,
           'epsilon_max': 1.,
-          'epsilon_decay_period': 1000,
-          'epsilon_delay_decay': 20,
+          'epsilon_decay_period': 10000,
+          'epsilon_delay_decay': 200,
           'batch_size': 20}
         self.dqn = dqn_agent(config, dqn)
 
@@ -51,13 +51,6 @@ class ProjectAgent:
             pickle.dump(agent_state, f)
 
     def load(self):
-        current_path = os.path.dirname(os.path.realpath(__file__))
-        print(current_path)
-        # list all files in the current directory
-        print(os.listdir(current_path))
-        # load the file test.txt
-        with open('test.txt', 'r') as f:
-            print(f.read())
         path = 'model.pkl'  
 
         with open(path, 'rb') as f:
@@ -155,12 +148,14 @@ class dqn_agent:
 
             # next transition
             step += 1
-            if done or step%200==0:
+            if done or step%200==0 or trunc:
                 episode += 1
                 print("Episode ", '{:3d}'.format(episode), 
                       ", epsilon ", '{:6.2f}'.format(epsilon), 
                       ", batch size ", '{:5d}'.format(len(self.memory)), 
                       ", episode return ", '{:4.1f}'.format(episode_cum_reward),
+                      ", done ", '{}'.format(done),
+                      ", trunc ", '{}'.format(trunc),
                       sep='')
                 state, _ = env.reset()
                 episode_return.append(episode_cum_reward)
