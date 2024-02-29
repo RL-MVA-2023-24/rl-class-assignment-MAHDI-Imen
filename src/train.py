@@ -55,7 +55,10 @@ class ProjectAgent:
         print(current_path)
         # list all files in the current directory
         print(os.listdir(current_path))
-        path = '/model.pkl'  
+        # load the file test.txt
+        with open('test.txt', 'r') as f:
+            print(f.read())
+        path = 'model.pkl'  
 
         with open(path, 'rb') as f:
             agent_state = pickle.load(f)
