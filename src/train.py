@@ -20,48 +20,38 @@ env = TimeLimit(
 # ENJOY!
 class ProjectAgent:
     def __init__(self):
-        dqn = nn.Sequential(
-            nn.Linear(6, 256),
-            nn.ReLU(),
-            nn.Linear(256, 4)
-        )
-        config = {'nb_actions': 4,
-          'learning_rate': 0.01,
-          'gamma': 0.95,
-          'buffer_size': 1000000,
-          'epsilon_min': 0.01,
-          'epsilon_max': 1.,
-          'epsilon_decay_period': 10000,
-          'epsilon_delay_decay': 200,
-          'batch_size': 20}
-        self.dqn = dqn_agent(config, dqn)
+        self.best_model = torch.nn.Sequential(nn.Linear(6, 32),
+                                nn.ReLU(),
+                                nn.Linear(32, 32),
+                                nn.ReLU(), 
+                                nn.Linear(32, 4))
 
     def act(self, observation, use_random=False):
         if use_random:
             return env.action_space.sample()
         else:
-            return greedy_action(self.dqn.model, observation)
+            return greedy_action(self.best_model, observation)
 
     def save(self, path):
         agent_state = {
-            'state_dict': self.dqn.model.state_dict(),
+            'state_dict': self.best_model.state_dict(),
         }
 
         with open(path, 'wb') as f:
             pickle.dump(agent_state, f)
 
     def load(self):
-        path = 'model.pkl'  
+        # load best model state dict from pickle
+        import pickle
+        with open('best_model.pkl', 'rb') as f:
+            best_model_state_dict = pickle.load(f)
 
-        with open(path, 'rb') as f:
-            agent_state = pickle.load(f)
 
-        # Load the neural network state dict
-        self.dqn.model.load_state_dict(agent_state['state_dict'])
+        self.best_model.load_state_dict(best_model_state_dict)
 
     def train(self, env):
         max_episode = 100
-        scores = self.dqn.train(env, max_episode)
+        scores = self.best_model.train(env, max_episode)
 
 
 
@@ -113,10 +103,13 @@ class dqn_agent:
             #update = torch.addcmul(R, self.gamma, 1-D, QYmax)
             update = torch.addcmul(R, 1-D, QYmax, value=self.gamma)
             QXA = self.model(X).gather(1, A.to(torch.long).unsqueeze(1))
+
             loss = self.criterion(QXA, update.unsqueeze(1))
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step() 
+            return loss.item()
+        return 0.0
     
     def train(self, env, max_episode):
         episode_return = []
@@ -125,8 +118,7 @@ class dqn_agent:
         state, _ = env.reset()
         epsilon = self.epsilon_max
         step = 0
-        max_episode_length = 400
-
+        loss = 0.0
         while episode < max_episode:
             # update epsilon
             if step > self.epsilon_delay:
@@ -144,19 +136,19 @@ class dqn_agent:
             episode_cum_reward += reward
 
             # train
-            self.gradient_step()
+            loss += self.gradient_step()
 
             # next transition
             step += 1
-            if done or step%200==0 or trunc:
-                episode += 1
-                print("Episode ", '{:3d}'.format(episode), 
+            if step%200 == 0:
+                print("Episode ", '{:2d}'.format(episode+1), 
                       ", epsilon ", '{:6.2f}'.format(epsilon), 
                       ", batch size ", '{:5d}'.format(len(self.memory)), 
                       ", episode return ", '{:4.1f}'.format(episode_cum_reward),
-                      ", done ", '{}'.format(done),
-                      ", trunc ", '{}'.format(trunc),
+                      ", loss ", '{:4.1f}'.format(loss/200),
                       sep='')
+                episode += 1
+                loss = 0
                 state, _ = env.reset()
                 episode_return.append(episode_cum_reward)
                 episode_cum_reward = 0
