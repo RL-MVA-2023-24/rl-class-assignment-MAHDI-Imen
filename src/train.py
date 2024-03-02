@@ -24,6 +24,8 @@ class ProjectAgent:
                                 nn.ReLU(),
                                 nn.Linear(32, 32),
                                 nn.ReLU(), 
+                                nn.Linear(32, 32),
+                                nn.ReLU(), 
                                 nn.Linear(32, 4))
 
     def act(self, observation, use_random=False):
@@ -43,7 +45,7 @@ class ProjectAgent:
     def load(self):
         # load best model state dict from pickle
         import pickle
-        with open('env_model.pkl', 'rb') as f:
+        with open('env_dr_model.pkl', 'rb') as f:
             best_model_state_dict = pickle.load(f)
 
         self.best_model.load_state_dict(best_model_state_dict)
