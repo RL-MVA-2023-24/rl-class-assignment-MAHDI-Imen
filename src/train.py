@@ -46,7 +46,6 @@ class ProjectAgent:
         with open('best_model.pkl', 'rb') as f:
             best_model_state_dict = pickle.load(f)
 
-
         self.best_model.load_state_dict(best_model_state_dict)
 
     def train(self, env):
