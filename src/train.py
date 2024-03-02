@@ -43,7 +43,7 @@ class ProjectAgent:
     def load(self):
         # load best model state dict from pickle
         import pickle
-        with open('best_model.pkl', 'rb') as f:
+        with open('env_model.pkl', 'rb') as f:
             best_model_state_dict = pickle.load(f)
 
         self.best_model.load_state_dict(best_model_state_dict)
